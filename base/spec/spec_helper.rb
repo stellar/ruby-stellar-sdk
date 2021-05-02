@@ -1,4 +1,5 @@
 require "simplecov"
+require "pry-byebug"
 
 require "rspec/its"
 

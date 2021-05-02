@@ -30,7 +30,8 @@ group :development do
   gem "faraday_middleware"
   gem "gem-release", require: false
   gem "octokit"
-  gem "pry"
+  gem "byebug", platform: %i[mri truffleruby]
+  gem "pry-byebug", require: false
   gem "pry-doc"
   gem "netrc"
   gem "xdrgen"
