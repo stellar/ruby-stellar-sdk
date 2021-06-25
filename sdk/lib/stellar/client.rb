@@ -199,6 +199,9 @@ module Stellar
         check_memo_required(tx_envelope)
       end
       @horizon.transactions._post(tx: tx_envelope.to_xdr(:base64))
+
+    rescue Faraday::BadRequestError => ex
+      raise HorizonError.make(ex.response[:body])
     end
 
     # Required by SEP-0029

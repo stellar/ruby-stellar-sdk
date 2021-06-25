@@ -9,6 +9,7 @@ module Stellar
   autoload :Amount
   autoload :Client
   autoload :SEP10
+  autoload :HorizonError
 
   module Horizon
     extend ActiveSupport::Autoload
