@@ -23,6 +23,7 @@ Stellar::Deprecation = ActiveSupport::Deprecation.new("next release", "stellar-b
 
 # extensions onto the generated files must be loaded manually, below
 
+require_relative "./stellar/account"
 require_relative "./stellar/account_flags"
 require_relative "./stellar/asset"
 require_relative "./stellar/claim_predicate"

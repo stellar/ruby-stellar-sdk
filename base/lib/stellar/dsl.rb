@@ -27,6 +27,25 @@ module Stellar
       )
     end
 
+    def Account(subject = nil)
+      case subject
+      when Account
+        subject
+      when /^M[A-Z0-9]{68}$/
+        Account.from_address(subject.to_str)
+      when nil
+        Account.random
+      else
+        begin
+          keypair = KeyPair(subject)
+
+          Account.new(keypair)
+        rescue TypeError
+          raise TypeError, "Cannot convert #{subject.inspect} to Stellar::Account"
+        end
+      end
+    end
+
     # @param [Asset, String, nil] subject
     # @return [Stellar::Asset] instance of the Stellar::Asset
     # @raise [TypeError] if subject cannot be converted to Stellar::Asset

@@ -5,9 +5,9 @@ module Stellar
     VERSION = ::Stellar::VERSION
   end
 
-  autoload :Account
   autoload :Amount
   autoload :Client
+  autoload :Federation
   autoload :SEP10
 
   module Horizon
@@ -19,3 +19,5 @@ module Stellar
 
   autoload :TransactionPage
 end
+
+require_relative "stellar/compat"

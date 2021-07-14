@@ -1,28 +1,21 @@
 RSpec.describe Stellar::TransactionBuilder do
   let(:base_fee) { 100 }
   let(:key_pair) { Stellar::KeyPair.random }
-  builder = nil
-  before(:each) do
-    builder = Stellar::TransactionBuilder.new(
-      source_account: key_pair,
-      sequence_number: 1
+  let(:source_account) { key_pair }
+  let(:enable_muxed_accounts) { false }
+
+  subject(:builder) do
+    described_class.new(
+      source_account: source_account,
+      sequence_number: 1,
+      enable_muxed_accounts: enable_muxed_accounts
     )
   end
 
   describe ".initialize" do
-    it "bad source_account" do
-      expect {
-        Stellar::TransactionBuilder.new(
-          source_account: key_pair.account_id,
-          sequence_number: 1
-        )
-      }.to raise_error(
-        ArgumentError, "Bad :source_account"
-      )
-    end
     it "bad sequence_number" do
       expect {
-        Stellar::TransactionBuilder.new(
+        described_class.new(
           source_account: key_pair,
           sequence_number: -1
         )
@@ -32,7 +25,7 @@ RSpec.describe Stellar::TransactionBuilder do
     end
     it "bad timeout" do
       expect {
-        Stellar::TransactionBuilder.new(
+        described_class.new(
           source_account: key_pair,
           sequence_number: 1,
           time_bounds: 600
@@ -43,7 +36,7 @@ RSpec.describe Stellar::TransactionBuilder do
     end
     it "bad base_fee" do
       expect {
-        Stellar::TransactionBuilder.new(
+        described_class.new(
           source_account: key_pair,
           sequence_number: 1,
           base_fee: 0
@@ -54,7 +47,7 @@ RSpec.describe Stellar::TransactionBuilder do
     end
     it "bad memo" do
       expect {
-        Stellar::TransactionBuilder.new(
+        described_class.new(
           source_account: key_pair,
           sequence_number: 1,
           memo: {"data" => "Testing bad memo"}
@@ -65,16 +58,12 @@ RSpec.describe Stellar::TransactionBuilder do
     end
 
     it "sets default time bounds unlimited" do
-      builder = Stellar::TransactionBuilder.new(
-        source_account: key_pair,
-        sequence_number: 1
-      )
       expect(builder.time_bounds.min_time).to eql(0)
       expect(builder.time_bounds.max_time).to eql(0)
     end
 
     it "success" do
-      builder = Stellar::TransactionBuilder.new(
+      builder = described_class.new(
         source_account: key_pair,
         sequence_number: 1,
         time_bounds: Stellar::TimeBounds.new(min_time: 0, max_time: 600),
@@ -87,7 +76,7 @@ RSpec.describe Stellar::TransactionBuilder do
 
   describe "constructor's memo assignment" do
     subject do
-      Stellar::TransactionBuilder.new(
+      described_class.new(
         source_account: Stellar::KeyPair.random,
         sequence_number: 1,
         memo: memo
@@ -148,13 +137,13 @@ RSpec.describe Stellar::TransactionBuilder do
     it "returns self" do
       expect(builder.add_operation(
         Stellar::Operation.bump_sequence({bump_to: 1})
-      )).to be_an_instance_of(Stellar::TransactionBuilder)
+      )).to be_an_instance_of(described_class)
     end
   end
 
   describe ".clear_operations" do
     it "can clear operations" do
-      builder = builder.add_operation(
+      builder.add_operation(
         Stellar::Operation.bump_sequence({bump_to: 1})
       ).clear_operations
       expect(builder.operations).to eql([])
@@ -163,7 +152,7 @@ RSpec.describe Stellar::TransactionBuilder do
     it "returns self" do
       expect(builder.add_operation(
         Stellar::Operation.bump_sequence({bump_to: 1})
-      ).clear_operations).to be_an_instance_of(Stellar::TransactionBuilder)
+      ).clear_operations).to be_an_instance_of(described_class)
     end
   end
 
@@ -178,7 +167,7 @@ RSpec.describe Stellar::TransactionBuilder do
       kp = Stellar::KeyPair.random
       expect(
         builder.set_source_account(kp)
-      ).to be_an_instance_of(Stellar::TransactionBuilder)
+      ).to be_an_instance_of(described_class)
     end
   end
 
@@ -189,7 +178,7 @@ RSpec.describe Stellar::TransactionBuilder do
     end
 
     it "returns self" do
-      expect(builder.set_sequence_number(3)).to be_an_instance_of(Stellar::TransactionBuilder)
+      expect(builder.set_sequence_number(3)).to be_an_instance_of(described_class)
     end
 
     it "raises an error for bad sequence number" do
@@ -219,7 +208,7 @@ RSpec.describe Stellar::TransactionBuilder do
     end
 
     it "returns self" do
-      expect(builder.set_timeout(10)).to be_an_instance_of(Stellar::TransactionBuilder)
+      expect(builder.set_timeout(10)).to be_an_instance_of(described_class)
     end
   end
 
@@ -246,13 +235,13 @@ RSpec.describe Stellar::TransactionBuilder do
     it "returns self" do
       expect(
         builder.set_base_fee(200)
-      ).to be_an_instance_of(Stellar::TransactionBuilder)
+      ).to be_an_instance_of(described_class)
     end
   end
 
-  describe ".build" do
+  describe "#build" do
     it "raises an error for non-integer timebounds" do
-      builder = Stellar::TransactionBuilder.new(
+      builder = described_class.new(
         source_account: key_pair,
         sequence_number: 1,
         time_bounds: Stellar::TimeBounds.new(min_time: "not", max_time: "integers")
@@ -265,7 +254,7 @@ RSpec.describe Stellar::TransactionBuilder do
     end
 
     it "raises an error for bad TimeBounds range" do
-      builder = Stellar::TransactionBuilder.new(
+      builder = described_class.new(
         source_account: key_pair,
         sequence_number: 1,
         time_bounds: Stellar::TimeBounds.new(min_time: Time.now.to_i + 10, max_time: Time.now.to_i)
@@ -299,7 +288,7 @@ RSpec.describe Stellar::TransactionBuilder do
 
     it "allows for multiple transactions to be created" do
       first_max_time = Time.now.to_i + 1000
-      builder = Stellar::TransactionBuilder.new(
+      builder = described_class.new(
         source_account: key_pair,
         sequence_number: 1,
         time_bounds: Stellar::TimeBounds.new(min_time: 0, max_time: first_max_time)
@@ -327,11 +316,32 @@ RSpec.describe Stellar::TransactionBuilder do
         Stellar::Operation.bump_sequence({bump_to: 2})
       ])
     end
+
+    it "sets tx's source account to muxed account without id" do
+      tx = builder.build
+
+      expect(tx.source_account.switch.name).to eq("key_type_ed25519")
+      expect(tx.source_account.ed25519).to eq(key_pair.raw_public_key)
+    end
+
+    context "when muxed accounts are enabled" do
+      let(:enable_muxed_accounts) { true }
+      let(:account_id) { 15 }
+      let(:source_account) { Stellar::Account.new(key_pair, account_id) }
+
+      it "sets tx's source account to muxed account with id set" do
+        tx = builder.build
+
+        expect(tx.source_account.switch.name).to eq("key_type_muxed_ed25519")
+        expect(tx.source_account.med25519.id).to eq(account_id)
+        expect(tx.source_account.med25519.ed25519).to eq(key_pair.raw_public_key)
+      end
+    end
   end
 
   describe ".path_payment_strict_receive" do
     it "works" do
-      tx = Stellar::TransactionBuilder.path_payment_strict_receive(
+      tx = described_class.path_payment_strict_receive(
         source_account: Stellar::KeyPair.random,
         sequence_number: 1,
         fee: 100,
@@ -347,7 +357,7 @@ RSpec.describe Stellar::TransactionBuilder do
 
   describe ".path_payment_strict_send" do
     it "works" do
-      tx = Stellar::TransactionBuilder.path_payment_strict_send(
+      tx = described_class.path_payment_strict_send(
         source_account: Stellar::KeyPair.random,
         sequence_number: 1,
         fee: 100,
@@ -363,7 +373,7 @@ RSpec.describe Stellar::TransactionBuilder do
 
   describe "#build_fee_bump" do
     subject do
-      Stellar::TransactionBuilder.new(
+      described_class.new(
         source_account: key_pair,
         sequence_number: 1,
         base_fee: base_fee
@@ -371,7 +381,7 @@ RSpec.describe Stellar::TransactionBuilder do
     end
 
     let(:inner_tx) do
-      builder = Stellar::TransactionBuilder.new(
+      builder = described_class.new(
         source_account: Stellar::KeyPair.random,
         sequence_number: 1,
         base_fee: base_fee

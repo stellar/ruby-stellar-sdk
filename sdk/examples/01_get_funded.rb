@@ -15,8 +15,8 @@ account = Stellar::Account.from_seed("SBXH4SEH32PENMMB66P4TY6LXUIFMRVFUMX2LJC3P2
 #
 # Reference an account (unauthenticated) from a federation name
 #
-#   account = Stellar::Account.lookup("nullstyle*stellarfed.org")
-#   account = Stellar::Account.lookup("nullstyle@gmail.com*stellarfed.org")
+#   account = Stellar::Federation.lookup("nullstyle*stellarfed.org")
+#   account = Stellar::Federation.lookup("nullstyle@gmail.com*stellarfed.org")
 #
 
 # create a connection to the stellar network
